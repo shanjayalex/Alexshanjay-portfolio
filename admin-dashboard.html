@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Alex Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="data-storage.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            border-radius: 4px;
+        }
+        
+        /* Glass Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-hover:hover {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa, #c084fc, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 40;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 0;
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            transition: height 0.3s ease;
+        }
+        
+        .sidebar-item.active::before,
+        .sidebar-item:hover::before {
+            height: 70%;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Card Styles */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(96, 165, 250, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .stat-card:hover::before {
+            animation: shimmer 0.5s ease;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(96, 165, 250, 0.2);
+        }
+        
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area.dragover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.4);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 50;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #60a5fa, #c084fc);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            /* Mobile Dashboard */
+            .quick-actions {
+                flex-direction: column !important;
+            }
+            
+            .quick-actions button {
+                width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            .stat-card {
+                padding: 1rem !important;
+            }
+            
+            .stat-card h3 {
+                font-size: 1.5rem !important;
+            }
+            
+            /* Mobile Upload */
+            .upload-form {
+                padding: 1rem !important;
+            }
+            
+            .upload-area {
+                padding: 2rem 1rem !important;
+            }
+            
+            /* Mobile Portfolio Grid */
+            .portfolio-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            /* Mobile Settings */
+            .settings-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            /* Mobile Modal */
+            .modal-content {
+                margin: 1rem !important;
+                max-width: calc(100% - 2rem) !important;
+            }
+            
+            /* Mobile Forms */
+            input, textarea, select {
+                font-size: 16px !important; /* Prevents zoom on iOS */
+            }
+            
+            /* Mobile Buttons */
+            .btn-primary {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Mobile Header */
+            .header-title {
+                font-size: 1.5rem !important;
+            }
+            
+            /* Mobile Navigation Items */
+            .sidebar-item {
+                padding: 1rem !important;
+                font-size: 0.9rem !important;
+            }
+            
+            .sidebar-item i {
+                width: 1.25rem !important;
+                margin-right: 0.75rem !important;
+            }
+            
+            /* Mobile User Info */
+            .user-info {
+                padding: 1rem !important;
+            }
+            
+            .user-info img {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+            }
+            
+            /* Mobile File Preview */
+            .file-preview {
+                padding: 1rem !important;
+            }
+            
+            /* Mobile Progress Bar */
+            .progress-bar {
+                height: 6px !important;
+            }
+            
+            /* Mobile Success Modal */
+            .success-modal {
+                margin: 1rem !important;
+                padding: 1.5rem !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Extra Small Mobile */
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .quick-actions button {
+                padding: 1rem !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .sidebar {
+                width: 100% !important;
+            }
+            
+            .main-content {
+                padding: 1rem !important;
+            }
+            
+            .upload-form {
+                padding: 0.5rem !important;
+            }
+            
+            .contact-form {
+                padding: 1rem !important;
+            }
+            
+            .portfolio-grid {
+                gap: 0.75rem !important;
+            }
+            
+            .stat-card {
+                padding: 0.75rem !important;
+            }
+            
+            .stat-card h3 {
+                font-size: 1.25rem !important;
+            }
+            
+            .section-title {
+                font-size: 1.5rem !important;
+            }
+        }
+        
+        @media (max-width: 320px) {
+            /* Very Small Mobile */
+            .sidebar-item {
+                padding: 0.75rem !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .sidebar-item i {
+                width: 1rem !important;
+                margin-right: 0.5rem !important;
+            }
+            
+            .btn-primary {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.75rem !important;
+            }
+            
+            .stat-card h3 {
+                font-size: 1rem !important;
+            }
+            
+            .stat-card p {
+                font-size: 0.75rem !important;
+            }
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar glass">
+        <div class="p-6">
+            <!-- Logo -->
+            <div class="flex items-center mb-8">
+                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                    <i class="fas fa-shield-alt text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold gradient-text">Admin Portal</h1>
+                    <p class="text-gray-400 text-sm">Portfolio Management</p>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="#dashboard" class="sidebar-item active flex items-center px-4 py-3 rounded-lg text-white" data-section="dashboard">
+                    <i class="fas fa-home w-5 mr-3"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#upload" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white" data-section="upload">
+                    <i class="fas fa-upload w-5 mr-3"></i>
+                    <span>Upload Works</span>
+                </a>
+                <a href="#portfolio" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white" data-section="portfolio">
+                    <i class="fas fa-images w-5 mr-3"></i>
+                    <span>Portfolio</span>
+                </a>
+                <a href="#analytics" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white" data-section="analytics">
+                    <i class="fas fa-chart-line w-5 mr-3"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#settings" class="sidebar-item flex items-center px-4 py-3 rounded-lg text-gray-300 hover:text-white" data-section="settings">
+                    <i class="fas fa-cog w-5 mr-3"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <!-- User Info -->
+            <div class="absolute bottom-6 left-6 right-6">
+                <div class="glass p-4 rounded-lg">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-white" id="adminUsername">Admin</p>
+                            <p class="text-gray-400 text-sm">Administrator</p>
+                        </div>
+                        <button id="logoutBtn" class="text-gray-400 hover:text-red-400 transition-colors">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content ml-80">
+        <!-- Header -->
+        <header class="glass sticky top-0 z-30 px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="mobileMenuBtn" class="md:hidden text-white mr-4">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="text-2xl font-bold" id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+        <!-- Content Sections -->
+        <div class="p-8">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section">
+                <!-- Quick Actions -->
+                    <div class="mb-8">
+                        <div class="quick-actions flex flex-wrap gap-4">
+                            <button onclick="loadAllWorks()" class="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform">
+                                <i class="fas fa-download mr-2"></i>Load All Works from Folder
+                            </button>
+                            <button onclick="resetData()" class="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform">
+                                <i class="fas fa-redo mr-2"></i>Reset to Default
+                            </button>
+                            <button onclick="exportData()" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:scale-105 transition-transform">
+                                <i class="fas fa-download mr-2"></i>Export Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                <!-- Stats Grid -->
+                <div class="stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-video text-white text-xl"></i>
+                            </div>
+                            <span class="text-green-400 text-sm">+12%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">24</h3>
+                        <p class="text-gray-400">Total Videos</p>
+                    </div>
+                    
+                    <div class="stat-card glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-camera text-white text-xl"></i>
+                            </div>
+                            <span class="text-green-400 text-sm">+8%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">156</h3>
+                        <p class="text-gray-400">Photos</p>
+                    </div>
+                    
+                    <div class="stat-card glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-eye text-white text-xl"></i>
+                            </div>
+                            <span class="text-green-400 text-sm">+25%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">3.2K</h3>
+                        <p class="text-gray-400">Total Views</p>
+                    </div>
+                    
+                    <div class="stat-card glass p-6 rounded-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heart text-white text-xl"></i>
+                            </div>
+                        <span class="text-green-400 text-sm">+18%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-1">892</h3>
+                        <p class="text-gray-400">Likes</p>
+                    </div>
+                </div>
+
+                <!-- Recent Uploads -->
+                <div class="glass p-6 rounded-xl">
+                    <h3 class="text-xl font-bold mb-6">Recent Uploads</h3>
+                    <div class="space-y-4" id="recentUploads">
+                        <!-- Recent uploads will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section id="upload-section" class="content-section hidden">
+                <div class="upload-form glass p-8 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-6">Upload New Work</h3>
+                    
+                    <!-- Upload Form -->
+                    <form id="uploadForm" class="space-y-6">
+                        <!-- Title -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Title *</label>
+                            <input 
+                                type="text" 
+                                id="workTitle"
+                                required
+                                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                                placeholder="Enter work title">
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                            <textarea 
+                                id="workDescription"
+                                rows="4"
+                                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                                placeholder="Describe your work..."></textarea>
+                        </div>
+
+                        <!-- Category -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Category *</label>
+                            <select 
+                                id="workCategory"
+                                required
+                                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Select category</option>
+                                <option value="video-editing">Video Editing</option>
+                                <option value="photo-editing">Photo Editing</option>
+                                <option value="ai-image">AI Image Generation</option>
+                                <option value="ai-video">AI Video Generation</option>
+                                <option value="graphic-design">Graphic Design</option>
+                                <option value="motion-graphics">Motion Graphics</option>
+                            </select>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Upload File *</label>
+                            <div class="upload-area p-8 rounded-lg text-center cursor-pointer" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">Drag & drop your file here or click to browse</p>
+                                <p class="text-gray-500 text-sm">Supported formats: MP4, MOV, AVI, JPG, PNG, GIF (Max 500MB)</p>
+                                <input type="file" id="fileInput" class="hidden" accept="video/*,image/*">
+                            </div>
+                            
+                            <!-- File Preview -->
+                            <div id="filePreview" class="hidden mt-4">
+                                <div class="glass p-4 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-file text-blue-400 mr-3"></i>
+                                            <div>
+                                                <p class="font-semibold text-white" id="fileName"></p>
+                                                <p class="text-gray-400 text-sm" id="fileSize"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" id="removeFile" class="text-red-400 hover:text-red-300">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <div class="progress-bar mt-3">
+                                        <div class="progress-fill" id="uploadProgress" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+                            <input 
+                                type="text" 
+                                id="workTags"
+                                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                                placeholder="Enter tags separated by commas (e.g., cinematic, color-grade, effects)">
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit"
+                            id="uploadBtn"
+                            class="w-full btn-primary text-white py-4 px-6 rounded-lg font-semibold flex items-center justify-center">
+                            <span id="uploadBtnText">Upload Work</span>
+                            <div id="uploadSpinner" class="spinner ml-2 hidden"></div>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Portfolio Section -->
+            <section id="portfolio-section" class="content-section hidden">
+                <div class="glass p-6 rounded-xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold">Portfolio Works</h3>
+                        <div class="flex space-x-2">
+                            <button class="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                                <i class="fas fa-th-large mr-2"></i>Grid
+                            </button>
+                            <button class="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                                <i class="fas fa-list mr-2"></i>List
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Portfolio Grid -->
+                    <div class="portfolio-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="portfolioGrid">
+                        <!-- Portfolio items will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="content-section hidden">
+                <div class="glass p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-6">Analytics Overview</h3>
+                    
+                    <!-- Analytics Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-lg font-semibold mb-4">Views Over Time</h4>
+                            <div class="h-64 flex items-center justify-center text-gray-400">
+                                <i class="fas fa-chart-line text-4xl mb-2"></i>
+                                <p>Chart visualization would go here</p>
+                            </div>
+                        </div>
+                        
+                        <div class="glass p-6 rounded-xl">
+                            <h4 class="text-lg font-semibold mb-4">Popular Categories</h4>
+                            <div class="h-64 flex items-center justify-center text-gray-400">
+                                <i class="fas fa-chart-pie text-4xl mb-2"></i>
+                                <p>Chart visualization would go here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings-section" class="content-section hidden">
+                <div class="glass p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold mb-6">Settings</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Profile Settings -->
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Profile Settings</h4>
+                            <div class="settings-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Display Name</label>
+                                    <input 
+                                        type="text" 
+                                        value="Alex"
+                                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                                    <input 
+                                        type="email" 
+                                        value="alex@example.com"
+                                        class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Security Settings -->
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Security</h4>
+                            <button class="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors">
+                                <i class="fas fa-key mr-2"></i>Change Password
+                            </button>
+                        </div>
+                        
+                        <!-- Site Settings -->
+                        <div>
+                            <h4 class="text-lg font-semibold mb-4">Site Settings</h4>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded">
+                                    <span class="ml-2 text-gray-300">Enable comments</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded">
+                                    <span class="ml-2 text-gray-300">Show contact form</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="w-4 h-4 text-blue-500 bg-gray-700 border-gray-600 rounded">
+                                    <span class="ml-2 text-gray-300">Maintenance mode</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-primary text-white py-3 px-6 rounded-lg font-semibold">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="glass p-8 rounded-xl max-w-md mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-green-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Success!</h3>
+                <p class="text-gray-300 mb-6" id="successMessage">Your work has been uploaded successfully.</p>
+                <button id="closeModal" class="btn-primary text-white py-2 px-6 rounded-lg">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize data manager
+        let portfolioData = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (localStorage.getItem('adminLoggedIn') !== 'true') {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            // Set admin username
+            const username = localStorage.getItem('adminUsername') || 'Admin';
+            document.getElementById('adminUsername').textContent = username;
+
+            // Initialize navigation
+            initializeNavigation();
+            
+            // Initialize upload functionality
+            initializeUpload();
+            
+            // Load data
+            loadRecentUploads();
+            loadPortfolio();
+            updateStatistics();
+            
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminUsername');
+                window.location.href = 'admin-login.html';
+            });
+
+            // Mobile menu
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('open');
+            });
+
+            // Listen for data changes
+            window.addEventListener('portfolioDataChanged', function() {
+                loadRecentUploads();
+                loadPortfolio();
+                updateStatistics();
+            });
+        });
+
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.sidebar-item');
+            const sections = document.querySelectorAll('.content-section');
+            const pageTitle = document.getElementById('pageTitle');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Hide all sections
+                    sections.forEach(section => section.classList.add('hidden'));
+                    
+                    // Show selected section
+                    const sectionId = this.dataset.section + '-section';
+                    const targetSection = document.getElementById(sectionId);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                    }
+                    
+                    // Update page title
+                    pageTitle.textContent = this.querySelector('span').textContent;
+                    
+                    // Close mobile menu
+                    if (window.innerWidth < 768) {
+                        document.querySelector('.sidebar').classList.remove('open');
+                    }
+                });
+            });
+        }
+
+        function initializeUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const filePreview = document.getElementById('filePreview');
+            const uploadForm = document.getElementById('uploadForm');
+
+            // Click to upload
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+
+            // Remove file
+            document.getElementById('removeFile').addEventListener('click', () => {
+                fileInput.value = '';
+                filePreview.classList.add('hidden');
+            });
+
+            // Form submission
+            uploadForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleUpload();
+            });
+        }
+
+        function handleFileSelect(file) {
+            const filePreview = document.getElementById('filePreview');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            
+            // Check file size (500MB limit)
+            if (file.size > 500 * 1024 * 1024) {
+                alert('File size exceeds 500MB limit');
+                return;
+            }
+            
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            filePreview.classList.remove('hidden');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function handleUpload() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadBtnText = document.getElementById('uploadBtnText');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadProgress = document.getElementById('uploadProgress');
+            
+            // Get form data
+            const title = document.getElementById('workTitle').value;
+            const description = document.getElementById('workDescription').value;
+            const category = document.getElementById('workCategory').value;
+            const tags = document.getElementById('workTags').value;
+            const fileInput = document.getElementById('fileInput');
+            
+            // Get file info
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select a file to upload');
+                return;
+            }
+            
+            // Determine file type
+            const fileType = file.type.startsWith('video/') ? 'video' : 'image';
+            
+            // Create file path (in production, this would be uploaded to a server)
+            const filePath = `assets/img/${file.name}`;
+            
+            // Show loading state
+            uploadBtnText.textContent = 'Uploading...';
+            uploadSpinner.classList.remove('hidden');
+            uploadBtn.disabled = true;
+            
+            // Simulate upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 100) progress = 100;
+                
+                uploadProgress.style.width = progress + '%';
+                
+                if (progress === 100) {
+                    clearInterval(interval);
+                    
+                    // Save to data storage
+                    const workData = {
+                        title: title,
+                        description: description,
+                        category: category,
+                        src: filePath,
+                        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+                        color: getCategoryColor(category)
+                    };
+                    
+                    let newWork;
+                    if (fileType === 'video') {
+                        newWork = window.portfolioDataManager.addVideo(workData);
+                    } else {
+                        newWork = window.portfolioDataManager.addImage(workData);
+                    }
+                    
+                    // Show success modal
+                    setTimeout(() => {
+                        showSuccessModal(`${fileType === 'video' ? 'Video' : 'Image'} "${title}" has been uploaded successfully!`);
+                        
+                        // Reset form
+                        document.getElementById('uploadForm').reset();
+                        document.getElementById('filePreview').classList.add('hidden');
+                        uploadProgress.style.width = '0%';
+                        
+                        // Reset button
+                        uploadBtnText.textContent = 'Upload Work';
+                        uploadSpinner.classList.add('hidden');
+                        uploadBtn.disabled = false;
+                        
+                        // Navigate to portfolio section to see the new work
+                        setTimeout(() => {
+                            document.querySelector('[data-section="portfolio"]').click();
+                        }, 1000);
+                    }, 500);
+                }
+            }, 200);
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                'video-editing': 'blue',
+                'photo-editing': 'purple',
+                'ai-image': 'pink',
+                'ai-video': 'green',
+                'graphic-design': 'orange',
+                'motion-graphics': 'indigo'
+            };
+            return colors[category] || 'blue';
+        }
+
+        function showSuccessModal(message) {
+            const modal = document.getElementById('successModal');
+            const messageEl = document.getElementById('successMessage');
+            
+            messageEl.textContent = message;
+            modal.classList.add('active');
+            
+            document.getElementById('closeModal').addEventListener('click', () => {
+                modal.classList.remove('active');
+            });
+        }
+
+        function updateStatistics() {
+            const stats = window.portfolioDataManager.getStatistics();
+            
+            // Update stat cards
+            const statCards = document.querySelectorAll('.stat-card h3');
+            if (statCards.length >= 4) {
+                statCards[0].textContent = stats.totalVideos;
+                statCards[1].textContent = stats.totalImages;
+                statCards[2].textContent = formatNumber(stats.totalViews);
+                statCards[3].textContent = formatNumber(stats.totalLikes);
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function loadRecentUploads() {
+            const container = document.getElementById('recentUploads');
+            container.innerHTML = '';
+            
+            const data = window.portfolioDataManager.getData();
+            const allWorks = [...data.videos, ...data.images].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            allWorks.slice(0, 3).forEach(item => {
+                const uploadEl = document.createElement('div');
+                uploadEl.className = 'flex items-center justify-between p-4 bg-white/5 rounded-lg';
+                uploadEl.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-${data.videos.includes(item) ? 'video' : 'image'} text-white"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-white">${item.title}</p>
+                            <p class="text-gray-400 text-sm">${item.category} • ${item.date}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p class="text-gray-400 text-sm">${item.views} views</p>
+                            <p class="text-gray-400 text-sm">${item.likes} likes</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleFeatured('${data.videos.includes(item) ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-yellow-400" title="Toggle Featured">
+                                <i class="fas fa-star ${item.featured ? 'text-yellow-400' : ''}"></i>
+                            </button>
+                            <button onclick="editItem('${data.videos.includes(item) ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-white">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteItem('${data.videos.includes(item) ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-red-400">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(uploadEl);
+            });
+        }
+
+        function loadPortfolio() {
+            const container = document.getElementById('portfolioGrid');
+            container.innerHTML = '';
+            
+            const data = window.portfolioDataManager.getData();
+            const allWorks = [...data.videos, ...data.images].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            allWorks.forEach(item => {
+                const isVideo = data.videos.includes(item);
+                const itemEl = document.createElement('div');
+                itemEl.className = 'glass p-6 rounded-xl hover:transform hover:scale-105 transition-all';
+                itemEl.innerHTML = `
+                    <div class="aspect-video bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg mb-4 flex items-center justify-center">
+                        <i class="fas fa-${isVideo ? 'video' : 'image'} text-white text-3xl"></i>
+                    </div>
+                    <h4 class="font-semibold text-white mb-2">${item.title}</h4>
+                    <p class="text-gray-400 text-sm mb-4">${item.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full">${item.category}</span>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleFeatured('${isVideo ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-yellow-400" title="Toggle Featured">
+                                <i class="fas fa-star ${item.featured ? 'text-yellow-400' : ''}"></i>
+                            </button>
+                            <button onclick="editItem('${isVideo ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-white">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteItem('${isVideo ? 'video' : 'image'}', ${item.id})" class="text-gray-400 hover:text-red-400">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+        }
+
+        function toggleFeatured(type, id) {
+            const item = window.portfolioDataManager.toggleFeatured(type, id);
+            if (item) {
+                loadRecentUploads();
+                loadPortfolio();
+                showSuccessModal(`"${item.title}" is now ${item.featured ? 'featured' : 'unfeatured'}`);
+            }
+        }
+
+        function editItem(type, id) {
+            const data = window.portfolioDataManager.getData();
+            const items = type === 'video' ? data.videos : data.images;
+            const item = items.find(i => i.id === parseInt(id));
+            
+            if (item) {
+                const newTitle = prompt('Edit title:', item.title);
+                if (newTitle && newTitle.trim()) {
+                    const updatedItem = window.portfolioDataManager.updateItem(type, id, { title: newTitle.trim() });
+                    if (updatedItem) {
+                        loadRecentUploads();
+                        loadPortfolio();
+                        showSuccessModal(`Work updated successfully!`);
+                    }
+                }
+            }
+        }
+
+        function deleteItem(type, id) {
+            const data = window.portfolioDataManager.getData();
+            const items = type === 'video' ? data.videos : data.images;
+            const item = items.find(i => i.id === parseInt(id));
+            
+            if (item && confirm(`Are you sure you want to delete "${item.title}"?`)) {
+                const success = window.portfolioDataManager.deleteItem(type, id);
+                if (success) {
+                    loadRecentUploads();
+                    loadPortfolio();
+                    updateStatistics();
+                    showSuccessModal(`Work deleted successfully!`);
+                }
+            }
+        }
+
+        // Additional functions for quick actions
+        function loadAllWorks() {
+            if (confirm('This will load all works from your assets/img folder into the portfolio. Continue?')) {
+                const updatedData = window.portfolioDataManager.updateWithAllWorks();
+                loadRecentUploads();
+                loadPortfolio();
+                updateStatistics();
+                showSuccessModal(`Successfully loaded ${updatedData.videos.length} videos and ${updatedData.images.length} images!`);
+            }
+        }
+
+        function resetData() {
+            if (confirm('This will reset all data to default. Are you sure?')) {
+                const resetData = window.portfolioDataManager.resetToDefault();
+                loadRecentUploads();
+                loadPortfolio();
+                updateStatistics();
+                showSuccessModal('Data reset to default successfully!');
+            }
+        }
+
+        function exportData() {
+            window.portfolioDataManager.exportData();
+            showSuccessModal('Data exported successfully!');
+        }
+    </script>
+</body>
+</html>
